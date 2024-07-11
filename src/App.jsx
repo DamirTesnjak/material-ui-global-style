@@ -108,7 +108,7 @@ function App() {
         <ThemeProvider
             theme={theme}
         >
-            <Box sx={{ height: "100vh" }}>
+            <Box>
                 <Typography variant="h4">
                     MUI styles info explorer
                 </Typography>
@@ -139,7 +139,7 @@ function App() {
                         sm={12}
                         md={2}
                         sx={{
-                             height: "86vh",
+                             // height: "86vh",
                         }}
                     >
                         <h5>
@@ -153,7 +153,7 @@ function App() {
                         sm={12}
                         md={8}
                         sx={{
-                            height: "86vh",
+                            // height: "86vh",
                         }}
                     >
                         <Grid item xs={12}>
@@ -199,6 +199,11 @@ function App() {
                              <div dangerouslySetInnerHTML={parseJSON()} />
                             </Box>
                         </Grid>
+                    </Grid>
+                    <Grid sx={12} sm={12} md={12}>
+                        <Typography>
+                            Damir Tešnjak
+                        </Typography>
                     </Grid>
                 </Grid>
             </Box>
