@@ -100,8 +100,11 @@ function App() {
     }
 
     const parseJSON = () => {
-        const hJson = `<pre>${hljs.highlight(`${JSON.stringify(themeStyleOverrideJSON(MuiClasses[muiClass]), undefined, 2)}`, { language: 'json' }).value}</pre>`;
-        return { __html: hJson || "" };
+        if (muiClass) {
+            const hJson = `<pre>${hljs.highlight(`${JSON.stringify(themeStyleOverrideJSON(MuiClasses[muiClass]), undefined, 2)}`, { language: 'json' }).value}</pre>`;
+            return { __html: hJson || "" };
+        }
+        return { __html: "" };
     }
 
     return (
