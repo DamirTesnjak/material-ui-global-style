@@ -73,6 +73,7 @@ import {
     PaginationItem,
     Paper,
     Popover,
+    Popper,
     Radio,
     RadioGroup,
     Rating,
@@ -114,6 +115,7 @@ import {
     Tooltip,
     Typography,
 } from "@mui/material";
+import { indexOf, isString } from "lodash";
 
 export const components = {
     AccordionActions,
@@ -190,6 +192,7 @@ export const components = {
     PaginationItem,
     Paper,
     Popover,
+    Popper,
     Radio,
     RadioGroup,
     Rating,
