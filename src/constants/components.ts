@@ -37,6 +37,7 @@ import {
     Divider,
     Drawer,
     Fab,
+    Fade,
     FilledInput,
     FormControl,
     FormControlLabel,
@@ -44,6 +45,7 @@ import {
     FormHelperText,
     FormLabel,
     Grid,
+    Grow,
     IconButton,
     Icon,
     ImageList,
@@ -115,7 +117,6 @@ import {
     Tooltip,
     Typography,
 } from "@mui/material";
-import { indexOf, isString } from "lodash";
 
 export const components = {
     AccordionActions,
@@ -156,6 +157,7 @@ export const components = {
     Divider,
     Drawer,
     Fab,
+    Fade,
     FilledInput,
     FormControl,
     FormControlLabel,
@@ -163,6 +165,7 @@ export const components = {
     FormHelperText,
     FormLabel,
     Grid,
+    Grow,
     IconButton,
     Icon,
     ImageList,

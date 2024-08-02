@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { isString, indexOf } from "lodash";
-import { Box, Grid, Link, ListItem, ListItemButton, Typography } from "@mui/material";
+import { indexOf } from "lodash";
+import { Box, Grid, Link, ListItem, ListItemButton, Typography, ThemeOptions } from "@mui/material";
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import hljs from 'highlight.js';
 
 import { MuiClasses } from "./constants/muiClasses";
 import { components } from "./constants/components";
@@ -10,13 +9,19 @@ import style from './style/style';
 
 import './App.css';
 
-const theme = createTheme(style);
+type ClassesNames = string;
+type generateComponentPropLinkArg = string;
+type ComponentClassesKeyValues = string[];
+type MuiClasses = typeof MuiClasses & {
+    [x: string]: any,
+}
+const theme = createTheme(style as ThemeOptions);
 
 function App() {
     const [muiClass, setMuiClass] = useState("");
 
-    function componentName(classes) {
-        const componentName = classes.split("Classes")[0];
+    function componentName(classesNames: ClassesNames) {
+        const componentName = classesNames.split("Classes")[0];
         return componentName[0]?.toUpperCase() + componentName.slice(1, componentName.length);
     }
 
@@ -43,8 +48,8 @@ function App() {
     }
 
     function themeStyleOverrideCSS() {
-        if (MuiClasses[muiClass]) {
-            const classNames = Object.values(MuiClasses[muiClass]);
+        if (MuiClasses[muiClass as keyof typeof MuiClasses] ) {
+            const classNames = Object.values(MuiClasses[muiClass as keyof typeof MuiClasses]);
             return classNames.map((className) => {
                 return (<ListItem key={className}>{className}</ListItem>)
             })
@@ -52,116 +57,127 @@ function App() {
     }
 
     function themeStyleOverrideJSON() {
-        if (MuiClasses[muiClass]) {
+        if (MuiClasses[muiClass as keyof typeof MuiClasses]) {
             const componentNameString = componentName(muiClass);
-            const componentClassesKeyValues = Object
-                .values(MuiClasses[muiClass])
+            const componentClassesKeyValues: ComponentClassesKeyValues = Object
+                .values(MuiClasses[muiClass as keyof typeof MuiClasses])
                 .filter((className) => className.includes(componentNameString));
 
             const componentClassName = componentClassesKeyValues[0].split("-")[0];
             const componentProperName = componentClassName.replace("Mui", "");
-            const styleOverridesKeysJson = {}
 
-            componentClassesKeyValues.forEach((classKey) => {
+            const componentClasses = componentClassesKeyValues.map((classKey) => {
                 const styleOverrideProp = classKey.split(`Mui${componentNameString}-`)[1];
-                styleOverridesKeysJson[styleOverrideProp] = {}
+                return (
+                    <div>
+                        <span style={{ color: "#e67300" }}>{`${styleOverrideProp}: `}</span><span>{"{}"}</span>
+                    </div>
+                )
             });
 
-            return {
-                [componentClassName]: {
-                    defaultProps: {
-                        ...getComponentProps(components[componentProperName])
-                    },
-                    styleOverrides: {
-                        ...styleOverridesKeysJson
-                    }
-                }
-            }
+            return (
+                <div style={{fontSize: '13px'}}>
+                    <div style={{paddingLeft: '0px'}}>{`{`}</div>
+                    <div style={{paddingLeft: '20px'}}><span style={{ color: "#e67300" }}>{`${componentClassName}: `}</span><span>{"{"}</span></div>
+                    <div style={{paddingLeft: '40px'}}><span style={{ color: "#e67300" }}>{`defaultProps `}</span><span>{"{"}</span></div>
+                    <div style={{paddingLeft: '60px'}}>{getComponentProps(components[componentProperName as keyof typeof components])}</div>
+                    <div style={{paddingLeft: '40px'}}>{`},`}</div>
+                    <div style={{paddingLeft: '40px'}}><span style={{ color: "#e67300" }}>{`styleOverrides `}</span><span>{"{"}</span></div>
+                    <div style={{paddingLeft: '60px'}}>{componentClasses}</div>
+                    <div style={{paddingLeft: '40px'}}>{`}`}</div>
+                    <div style={{paddingLeft: '20px'}}>{`}`}</div>
+                    <div>{`}`}</div>
+                </div>
+            )
+            
         }
     }
 
-    function getComponentProps(component) {
+    function getComponentProps(component: any) {
         // eslint-disable-next-line react/forbid-foreign-prop-types
         if (component) {
-            const componentsList = Object.keys(components);
+            const componentsList: string[] = Object.keys(components);
 
-            const componentCodeAsArrayOfStrings = component.render.toString().split("\n");
+            const componentCodeAsArrayOfStrings: string[] = component.render.toString().split("\n");
+
             console.log('componentCodeAsArrayOfStrings', componentCodeAsArrayOfStrings);
             const sliceEndIndex = indexOf(componentCodeAsArrayOfStrings, "    } = props,");
             let sliceStartIndex = indexOf(componentCodeAsArrayOfStrings, "    } = props,");
-
-            console.log('sliceEndIndex', sliceEndIndex);
-            console.log('sliceEndIndex', sliceEndIndex);
 
             if (sliceStartIndex > -1) {
                 while (componentCodeAsArrayOfStrings[sliceStartIndex] !== "  const {") {
                     sliceStartIndex--;
                 }
                 const arrayOfComponentsPropsAsString = componentCodeAsArrayOfStrings.slice(sliceStartIndex + 1, sliceEndIndex);
-                console.log('arrayOfComponentsPropsAsString', arrayOfComponentsPropsAsString);
                 let arrayOfComponentProps = arrayOfComponentsPropsAsString.map((propAsString) => {
                     const newProp = propAsString.replace(/[ ,]+/g, " ")
                         .split(" = ");
 
                     // component property key
-                    const newPropKey = newProp[0]
-                        .replaceAll(" ", "");
-
+                    const newPropKey = function (){
+                        let componentKeyProp = newProp[0].replaceAll(" ", "")
+                        if(componentKeyProp.includes(":")) {
+                            componentKeyProp = componentKeyProp.split(":")[0];
+                            return componentKeyProp;
+                        }
+                        return componentKeyProp;
+                    }();
+                    
                     // component property value
                     const newPropValue = function () {
                         let i = 0;
                         for (i; i < componentsList.length; i++) {
                             if (newProp[1] && newProp[1].includes(componentsList[i])) {
                                 const componentName = newProp[1].replaceAll(/[^A-Za-z0-9]/g, ",").split(',')[1]
-                                return `<${componentName} />`;
+                                return <span style={{ color: "#ff0066" }}>{`<${componentName} />`}</span>;
                             };
                         }
                         if (newProp[1] && Number(newProp[1])) {
-                            return Number(newProp[1]);
+                            return <span style={{ color: "#3333ff" }}>{Number(newProp[1])}</span>;
                         }
                         if (newProp[1] && newProp[1].includes("{}")) {
-                            console.log('tetet');
-                            return new Object;
+                            return "{}";
                         }
                         if (newProp[1] && newProp[1].includes('true')) {
-                            return true;
+                            return (<span style={{ color: "#cc33ff" }}>true</span>);
                         }
                         if (newProp[1] && newProp[1].includes('false')) {
-                            return false;
+                            return (<span style={{ color: "#cc33ff" }}>false</span>);
                         }
                         if (newProp[1] && newProp[1][newProp[1].length - 1] === " ") {
                             return newProp[1].slice(0, newProp[1].length - 1);
                         }
                         if (newProp[1] && newProp[1].includes('')) {
-                            return newProp[1].replaceAll("'", "").slice(0, newProp[1].length - 1);
+                            return <span style={{ color: "#009933" }}>{newProp[1].slice(0, newProp[1].length)}</span>;
                         }
                         if (!newProp[1]) {
-                            return "Cannot get info from parsing the component code. Check MaterialUI documentaion!";
+                            return (
+                            <Link
+                                component="a"
+                                href={generateComponentPropLink(newPropKey)}
+                                target="_blank"
+                            >
+                                    {newPropKey}
+                            </Link>)
                         }
-                    }()
-                    return {
-                        [newPropKey]: function () {
-                            if (isString(newPropValue)) {
-                                return newPropValue.replaceAll("'", "");
-                            }
-                            return newPropValue;
-                        }()
+                    }();
+
+                    const reqex = new RegExp("[{()}//]", "g");
+
+                    console.log('reqex.test(newPropKey)', reqex.test(newPropKey));
+
+
+                    if (newPropKey.length > 1 && !reqex.test(newPropKey)) {
+                        return (<div>
+                            <span style={{ color: "#e67300" }}>{newPropKey}: </span><span>{newPropValue}</span>
+                        </div>)
+                    } else {
+                        (<></>)
                     }
                 });
 
                 console.log('arrayOfComponentProps', arrayOfComponentProps);
-
-                let propertiesJson = {}
-
-                arrayOfComponentProps.forEach((prop) => {
-                    propertiesJson = {
-                        ...propertiesJson,
-                        ...prop,
-                    }
-                });
-                console.log('propertiesJson', propertiesJson);
-
-                return propertiesJson;
+                return arrayOfComponentProps;
             }
         }
     }
@@ -174,10 +190,10 @@ function App() {
             const link = `https://mui.com/material-ui/api/${componentNameKebabCase}/`;
             return link;
         }
-        return null;
+        return undefined;
     }
 
-    function generateComponentPropLink(prop) {
+    function generateComponentPropLink(prop: generateComponentPropLinkArg) {
         if (muiClass) {
             const componentNameString = componentName(muiClass);
             const componentNameKebabCase = componentNameString
@@ -185,15 +201,7 @@ function App() {
             const link = `https://mui.com/material-ui/api/${componentNameKebabCase}/#${componentNameKebabCase}-prop-${prop}`;
             return link;
         }
-        return null;
-    }
-
-    const parseJSON = () => {
-        if (muiClass) {
-            const hJson = `<pre>${hljs.highlight(`${JSON.stringify(themeStyleOverrideJSON(MuiClasses[muiClass]), undefined, 2)}`, { language: 'json' }).value}</pre>`;
-            return { __html: hJson || "" };
-        }
-        return { __html: "" };
+        return undefined;
     }
 
     return (
@@ -222,7 +230,7 @@ function App() {
                             The link is automatically generated for selected component,
                         </p>
                         <Typography>
-                            {muiClass && (<Link href={generateComponentLink()} target="_blank">{`${componentName(muiClass)} API`}</Link>)}
+                            {muiClass && (<Link component= "a" href={generateComponentLink()} target="_blank">{`${componentName(muiClass)} API`}</Link>)}
                         </Typography>
                     </Grid>
                     <Grid
@@ -288,11 +296,11 @@ function App() {
                                     overflowY: "scroll",
                                 }}
                             >
-                                <div dangerouslySetInnerHTML={parseJSON()} />
+                                {themeStyleOverrideJSON()}
                             </Box>
                         </Grid>
                     </Grid>
-                    <Grid sx={12} sm={12} md={12}>
+                    <Grid xs={12} sm={12} md={12}>
                         <Typography>
                             Damir Tešnjak
                         </Typography>
