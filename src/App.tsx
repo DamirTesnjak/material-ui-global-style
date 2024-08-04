@@ -10,7 +10,6 @@ import style from './style/style';
 import './App.css';
 
 type ClassesNames = string;
-type generateComponentPropLinkArg = string;
 type ComponentClassesKeyValues = string[];
 type MuiClasses = typeof MuiClasses & {
     [x: string]: any,
@@ -19,6 +18,7 @@ const theme = createTheme(style as ThemeOptions);
 
 function App() {
     const [muiClass, setMuiClass] = useState("");
+    const [jsonDisplayAsHTML, getJsonDisplayAsHTML] = useState([]);
 
     function componentName(classesNames: ClassesNames) {
         const componentName = classesNames.split("Classes")[0];
@@ -37,7 +37,10 @@ function App() {
                         return (
                             <ListItemButton
                                 key={muiClassItem}
-                                onClick={() => setMuiClass(muiClassItem)}
+                                onClick={() => {
+                                    setMuiClass(muiClassItem);
+                                    getComponentProps(muiClassItem);
+                                }}
                                 selected={muiClassItem === muiClass}
                             >
                                 {componentName(muiClassItem)}
@@ -48,7 +51,7 @@ function App() {
     }
 
     function themeStyleOverrideCSS() {
-        if (MuiClasses[muiClass as keyof typeof MuiClasses] ) {
+        if (MuiClasses[muiClass as keyof typeof MuiClasses]) {
             const classNames = Object.values(MuiClasses[muiClass as keyof typeof MuiClasses]);
             return classNames.map((className) => {
                 return (<ListItem key={className}>{className}</ListItem>)
@@ -76,110 +79,236 @@ function App() {
             });
 
             return (
-                <div style={{fontSize: '13px'}}>
-                    <div style={{paddingLeft: '0px'}}>{`{`}</div>
-                    <div style={{paddingLeft: '20px'}}><span style={{ color: "#e67300" }}>{`${componentClassName}: `}</span><span>{"{"}</span></div>
-                    <div style={{paddingLeft: '40px'}}><span style={{ color: "#e67300" }}>{`defaultProps `}</span><span>{"{"}</span></div>
-                    <div style={{paddingLeft: '60px'}}>{getComponentProps(components[componentProperName as keyof typeof components])}</div>
-                    <div style={{paddingLeft: '40px'}}>{`},`}</div>
-                    <div style={{paddingLeft: '40px'}}><span style={{ color: "#e67300" }}>{`styleOverrides `}</span><span>{"{"}</span></div>
-                    <div style={{paddingLeft: '60px'}}>{componentClasses}</div>
-                    <div style={{paddingLeft: '40px'}}>{`}`}</div>
-                    <div style={{paddingLeft: '20px'}}>{`}`}</div>
+                <div style={{ fontSize: '13px' }}>
+                    <div style={{ paddingLeft: '0px' }}>{`{`}</div>
+                    <div style={{ paddingLeft: '20px' }}><span style={{ color: "#e67300" }}>{`${componentClassName}: `}</span><span>{"{"}</span></div>
+                    <div style={{ paddingLeft: '40px' }}><span style={{ color: "#e67300" }}>{`defaultProps `}</span><span>{"{"}</span></div>
+                    <div style={{ paddingLeft: '60px' }}>{jsonDisplayAsHTML}</div>
+                    <div style={{ paddingLeft: '40px' }}>{`},`}</div>
+                    <div style={{ paddingLeft: '40px' }}><span style={{ color: "#e67300" }}>{`styleOverrides `}</span><span>{"{"}</span></div>
+                    <div style={{ paddingLeft: '60px' }}>{componentClasses}</div>
+                    <div style={{ paddingLeft: '40px' }}>{`}`}</div>
+                    <div style={{ paddingLeft: '20px' }}>{`}`}</div>
                     <div>{`}`}</div>
                 </div>
             )
-            
+
         }
     }
 
-    function getComponentProps(component: any) {
-        // eslint-disable-next-line react/forbid-foreign-prop-types
-        if (component) {
-            const componentsList: string[] = Object.keys(components);
+    function getComponentProps(componentClass: ClassesNames) {
+        const componentNameString = componentName(componentClass);
 
-            const componentCodeAsArrayOfStrings: string[] = component.render.toString().split("\n");
-
-            console.log('componentCodeAsArrayOfStrings', componentCodeAsArrayOfStrings);
-            const sliceEndIndex = indexOf(componentCodeAsArrayOfStrings, "    } = props,");
-            let sliceStartIndex = indexOf(componentCodeAsArrayOfStrings, "    } = props,");
-
-            if (sliceStartIndex > -1) {
-                while (componentCodeAsArrayOfStrings[sliceStartIndex] !== "  const {") {
-                    sliceStartIndex--;
+        const fetchTypeScriptComponentCode = () => {
+            const url = `https://raw.githubusercontent.com/mui/material-ui/next/packages/mui-material/src/${componentNameString}/${componentNameString}.d.ts`;
+            fetch(url, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "text/plain"
                 }
-                const arrayOfComponentsPropsAsString = componentCodeAsArrayOfStrings.slice(sliceStartIndex + 1, sliceEndIndex);
-                let arrayOfComponentProps = arrayOfComponentsPropsAsString.map((propAsString) => {
-                    const newProp = propAsString.replace(/[ ,]+/g, " ")
-                        .split(" = ");
+            })
+                .then((res) => {
+                    if (res) {
+                        res.text()
+                            .then((tSCode) => {
+                                const tSCodeArrayOfString = tSCode.split("\n");
+                                console.log('tSCodeArrayOfString', tSCodeArrayOfString);
+                                // extracting relevant code
+                                //------------------------------------------------------------
+                                let startIndex = 0;
+                                for (startIndex; startIndex < tSCodeArrayOfString.length; startIndex++) {
+                                    const interfaceStartLineV1 = `export interface ${componentNameString}Props<`;
+                                    const interfaceStartLineV2 = `export interface ${componentNameString}Props {`;
+                                    const interfaceStartLineV3 = `export interface ${componentNameString}OwnProps {`;
+                                    const interfaceStartLineV4 = `export interface ${componentNameString}Props extends StandardProps<React.HTMLAttributes<HTMLDivElement>> {`;
+                                    const interfaceStartLineV5 = `export type ${componentNameString}TypeMap<`;
+                                    const interfaceStartLineV6 = `export interface ${componentNameString}Props extends StandardProps<PaperProps, 'variant'>, ${componentNameString}SlotsAndSlotProps {`;
+                                    const interfaceStartLineV7 = `export interface ${componentNameString}Props extends TypographyProps<'div'>`
+                                    const interfaceStartLineV8 = `export interface ${componentNameString}TypeMap<`
+                                    const interfaceStartLineV9 = `export interface ${componentNameString}Props`;
+                                    const interfaceStartLineV10 = `export interface Base${componentNameString}Props<Value = unknown>`;
+                                    const interfaceStartLineV11 = `export interface ${componentNameString}OwnProps`;
+                                    const interfaceStartLineV12 = `export interface ${componentNameString}Props extends TypographyProps<'div'> {`;
 
-                    // component property key
-                    const newPropKey = function (){
-                        let componentKeyProp = newProp[0].replaceAll(" ", "")
-                        if(componentKeyProp.includes(":")) {
-                            componentKeyProp = componentKeyProp.split(":")[0];
-                            return componentKeyProp;
-                        }
-                        return componentKeyProp;
-                    }();
-                    
-                    // component property value
-                    const newPropValue = function () {
-                        let i = 0;
-                        for (i; i < componentsList.length; i++) {
-                            if (newProp[1] && newProp[1].includes(componentsList[i])) {
-                                const componentName = newProp[1].replaceAll(/[^A-Za-z0-9]/g, ",").split(',')[1]
-                                return <span style={{ color: "#ff0066" }}>{`<${componentName} />`}</span>;
-                            };
-                        }
-                        if (newProp[1] && Number(newProp[1])) {
-                            return <span style={{ color: "#3333ff" }}>{Number(newProp[1])}</span>;
-                        }
-                        if (newProp[1] && newProp[1].includes("{}")) {
-                            return "{}";
-                        }
-                        if (newProp[1] && newProp[1].includes('true')) {
-                            return (<span style={{ color: "#cc33ff" }}>true</span>);
-                        }
-                        if (newProp[1] && newProp[1].includes('false')) {
-                            return (<span style={{ color: "#cc33ff" }}>false</span>);
-                        }
-                        if (newProp[1] && newProp[1][newProp[1].length - 1] === " ") {
-                            return newProp[1].slice(0, newProp[1].length - 1);
-                        }
-                        if (newProp[1] && newProp[1].includes('')) {
-                            return <span style={{ color: "#009933" }}>{newProp[1].slice(0, newProp[1].length)}</span>;
-                        }
-                        if (!newProp[1]) {
-                            return (
-                            <Link
-                                component="a"
-                                href={generateComponentPropLink(newPropKey)}
-                                target="_blank"
-                            >
-                                    {newPropKey}
-                            </Link>)
-                        }
-                    }();
+                                    const wordExist = tSCodeArrayOfString[startIndex] === interfaceStartLineV1
+                                        || tSCodeArrayOfString[startIndex] === interfaceStartLineV2
+                                        || tSCodeArrayOfString[startIndex] === interfaceStartLineV3
+                                        || tSCodeArrayOfString[startIndex] === interfaceStartLineV4
+                                        || tSCodeArrayOfString[startIndex] === interfaceStartLineV5
+                                        || tSCodeArrayOfString[startIndex] === interfaceStartLineV6
+                                        || tSCodeArrayOfString[startIndex] === interfaceStartLineV7
+                                        || tSCodeArrayOfString[startIndex] === interfaceStartLineV8
+                                        || tSCodeArrayOfString[startIndex] === interfaceStartLineV9
+                                        || tSCodeArrayOfString[startIndex] === interfaceStartLineV10
+                                        || tSCodeArrayOfString[startIndex] === interfaceStartLineV11
+                                        || tSCodeArrayOfString[startIndex] === interfaceStartLineV12
+                                    if (wordExist) {
+                                        break;
+                                    }
+                                }
 
-                    const reqex = new RegExp("[{()}//]", "g");
+                                let endIndex = startIndex;
+                                for (endIndex; endIndex < tSCodeArrayOfString.length; endIndex++) {
+                                    if (tSCodeArrayOfString[endIndex] === "") {
+                                        break;
+                                    }
+                                }
+                                const extractedTypeOrInterface = tSCodeArrayOfString.slice(startIndex, endIndex);
 
-                    console.log('reqex.test(newPropKey)', reqex.test(newPropKey));
+                                let extractedCodeIndexStart = 0;
+                                for (extractedCodeIndexStart; extractedCodeIndexStart < extractedTypeOrInterface.length; extractedCodeIndexStart++) {
+                                    const startLine = extractedTypeOrInterface[extractedCodeIndexStart].includes("/**");
+                                    if (startLine) {
+                                        break;
+                                    }
+                                }
 
+                                const extractedPropsList = extractedTypeOrInterface.slice(extractedCodeIndexStart, extractedTypeOrInterface.length);
+                                const extractedPropsListCleaned = extractedPropsList.filter(
+                                    (line) => (line.includes(":")
+                                        || line.includes("<")
+                                        || line.includes(">")
+                                        || line.includes("&")
+                                        || line.includes("{")
+                                        || line.includes("}")
+                                        || line.includes("@default")
+                                    )
+                                );
+                                console.log("extractedPropsListCleaned", extractedPropsListCleaned);
 
-                    if (newPropKey.length > 1 && !reqex.test(newPropKey)) {
-                        return (<div>
-                            <span style={{ color: "#e67300" }}>{newPropKey}: </span><span>{newPropValue}</span>
-                        </div>)
-                    } else {
-                        (<></>)
+                                const propListAsHtmlElements = extractedPropsListCleaned.map((line) => {
+                                    const lineIndex = extractedPropsListCleaned.indexOf(line);
+                                    const returnAsHTML = (defaultValue = "") => {
+                                        if ((line.includes(":")
+                                            || line.includes("<")
+                                            || line.includes(">")
+                                            || line.includes("&")
+                                            || line.includes("{")
+                                            || line.includes("}")) && !line.includes("*")
+                                        ) {
+                                            const lineSplit = line.split(":");
+                                            const newPropValue = function () {
+                                                if (Number(defaultValue)) {
+                                                    return (<span style={{
+                                                        display: 'inline-block',
+                                                        color: "#3333ff"
+                                                    }}>
+                                                        <pre>
+                                                            {Number(defaultValue)}
+                                                        </pre>
+                                                    </span>);
+                                                }
+                                                if (defaultValue.includes("{}")) {
+                                                    return (<span style={{
+                                                        display: 'inline-block',
+                                                    }}>{"{"}</span>);
+                                                }
+                                                if (defaultValue.includes('true')) {
+                                                    return (<span style={{
+                                                        display: 'inline-block',
+                                                        color: "#cc33ff"
+                                                    }}>
+                                                        <pre>
+                                                            true
+                                                        </pre>
+                                                    </span>);
+                                                }
+                                                if (defaultValue.includes('false')) {
+                                                    return (<span style={{
+                                                        display: 'inline-block',
+                                                        color: "#cc33ff"
+                                                    }}>
+                                                        <pre>
+                                                            false
+                                                        </pre>
+                                                    </span>);
+                                                }
+                                                if (defaultValue[defaultValue.length - 1] === " ") {
+                                                    return (<span style={{
+                                                        display: 'inline-block',
+                                                        // color: "#009933"
+                                                    }}>
+                                                        <pre>
+                                                            {defaultValue.slice(0, defaultValue.length - 1)}
+                                                        </pre>
+                                                    </span>);
+                                                }
+                                                if (defaultValue.includes('')) {
+                                                    return (<span style={{
+                                                        display: 'inline-block',
+                                                        // color: "#009933"
+                                                    }}>
+                                                        <pre>
+                                                            {defaultValue.slice(0, defaultValue.length)}
+                                                        </pre>
+                                                    </span>);
+                                                }
+                                            }();
+                                            return (
+                                                <div>
+                                                    <span style={{
+                                                        display: 'inline-block',
+                                                        color: "#e67300",
+                                                    }}>
+                                                        <pre>
+                                                            {lineSplit[0].replace("?", "")}:
+                                                        </pre>
+                                                    </span>
+                                                    {newPropValue}
+                                                </div>
+                                            )
+                                        }
+                                        return (
+                                            <>
+                                            </>
+                                        )
+                                    }
+
+                                    if (lineIndex > 0 && extractedPropsListCleaned[lineIndex - 1].includes("@default")) {
+                                        const defaultValue = extractedPropsListCleaned[lineIndex - 1].split(" @default ")[1];
+                                        return returnAsHTML(` ${defaultValue}, otherwise it is ${extractedPropsListCleaned[lineIndex]}`.replace("   ", " ").replace("?", ""));
+                                    } else {
+                                        if (line.includes("*")) {
+                                            return <></>
+                                        }
+                                        const nonDefaultProps = line.split("; ");
+                                        console.log("nonDefaultProps", nonDefaultProps);
+                                        const nonDefaultPropsAsHTML = nonDefaultProps.map((lineAsHTML) => {
+                                            const nonDefaultPropline = lineAsHTML.replace(";", ",")
+                                                .replace("?", "")
+
+                                            if (nonDefaultPropline.includes(":")) {
+                                                const lineSplitted = nonDefaultPropline.split(":")
+                                                return (<div>
+                                                    <span style={{
+                                                        display: 'inline-block',
+                                                        color: "#e67300",
+                                                    }}>
+                                                        <pre>
+                                                            {lineSplitted[0]}:
+                                                        </pre>
+                                                    </span>
+                                                    <span style={{ display: 'inline-block' }}>
+                                                        <pre>
+                                                            {lineSplitted.slice(1, lineSplitted.length)}
+                                                        </pre>
+                                                    </span>
+                                                </div>)
+                                            }
+                                            return (
+                                                <div><span><pre>{nonDefaultPropline}</pre></span></div>
+                                            )
+                                        })
+                                        return nonDefaultPropsAsHTML;
+                                    }
+                                })
+                                getJsonDisplayAsHTML(propListAsHtmlElements)
+                            });
                     }
-                });
-
-                console.log('arrayOfComponentProps', arrayOfComponentProps);
-                return arrayOfComponentProps;
-            }
+                })
+                .catch((err) => console.log('err', err))
         }
+        fetchTypeScriptComponentCode();
     }
 
     function generateComponentLink() {
@@ -193,24 +322,13 @@ function App() {
         return undefined;
     }
 
-    function generateComponentPropLink(prop: generateComponentPropLinkArg) {
-        if (muiClass) {
-            const componentNameString = componentName(muiClass);
-            const componentNameKebabCase = componentNameString
-                .replace(/([a-z0–9])([A-Z])/g, "$1-$2").toLowerCase();
-            const link = `https://mui.com/material-ui/api/${componentNameKebabCase}/#${componentNameKebabCase}-prop-${prop}`;
-            return link;
-        }
-        return undefined;
-    }
-
     return (
         <ThemeProvider
             theme={theme}
         >
             <Box>
                 <Typography variant="h4">
-                    MUI styles info explorer
+                    MaterialUI styles values overview
                 </Typography>
                 <Grid container>
                     <Grid
@@ -220,17 +338,14 @@ function App() {
                         md={2}
                     >
                         <p>
-                            This web app is a tool, to help you find class names for CSS styling and overview of
-                            keys of the JSON object for "ThemeProvider". For the latter, some
-                            keys in a JSON object of a selected component will simply not work. This is because, the gathered keys
-                            are collected from <code>"@mui/material"</code> library files and some of them are not included in component's API.
-                        </p>
-                        <p>
-                            To find out which keys are valid visit API page of selected component.
-                            The link is automatically generated for selected component,
+                        This web app is a tool, to help you find class names for CSS styling and look at an overview of JSON objects,
+                        their keys, default values & types, used for overriding default styles of MaterialUI components.
+                        Information was fetched from the GitHub page <code>https://github.com/mui/material-ui/tree/next/packages/mui-material/src</code> and
+                        then parsed from library <code>*.d.ts</code> files. For some components parsing was not completely successful,
+                        so please visit the link below for the selected component!
                         </p>
                         <Typography>
-                            {muiClass && (<Link component= "a" href={generateComponentLink()} target="_blank">{`${componentName(muiClass)} API`}</Link>)}
+                            {muiClass && (<Link component="a" href={generateComponentLink()} target="_blank">{`${componentName(muiClass)} API`}</Link>)}
                         </Typography>
                     </Grid>
                     <Grid
@@ -284,10 +399,10 @@ function App() {
                             md={6}
                         >
                             <h6>
-                                Style overrride
+                                Theme style overrride
                             </h6>
                             <Typography>
-                                How to incoporate generated JSON, please visit: <br />
+                                How to incoporate theme styles overwrite, please visit: <br />
                                 <Link href="https://mui.com/material-ui/customization/theme-components/#theme-default-props" target="_blank">Theme style overrides</Link>
                             </Typography>
                             <Box
