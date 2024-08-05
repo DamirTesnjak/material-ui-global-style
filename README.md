@@ -8,4 +8,4 @@ This web app is a tool, to help you find selector names for CSS styling and look
 
 ## Screenshot
 
-![sreenshot](https://github.com/DamirTesnjak/material-ui-global-style/blob/main/screenshot.png)
+![sreenshot](https://github.com/DamirTesnjak/material-ui-global-style/blob/master/screenshot.png)
