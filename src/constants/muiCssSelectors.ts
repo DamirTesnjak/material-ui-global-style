@@ -116,7 +116,7 @@ import {
     typographyClasses,
 } from "@mui/material";
 
-export const MuiClasses = {
+export const muiCssSelectors = {
     accordionClasses,
     accordionActionsClasses,
     accordionDetailsClasses,

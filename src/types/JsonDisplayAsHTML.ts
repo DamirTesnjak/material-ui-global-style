@@ -1,0 +1,1 @@
+export type JsonDisplayAsHTML = (JSX.Element | JSX.Element[])[];
