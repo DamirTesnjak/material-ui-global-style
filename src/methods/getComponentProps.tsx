@@ -141,15 +141,12 @@ export function getComponentProps(args: GetComponentPropsArgs) {
                                             </div>
                                         )
                                     }
-                                    return (
-                                        <>
-                                        </>
-                                    )
+                                    return (<div/>)
                                 }
 
                                 if (propLineIndex > 0 && propsListCleaned[propLineIndex - 1].includes("@default")) {
 
-                                    // defailt value of a prop
+                                    // default value of a prop
                                     const defaultValue = propsListCleaned[propLineIndex - 1].split(" @default ")[1];
                                     return returnAsHTML(` ${defaultValue}, otherwise it is ${propsListCleaned[propLineIndex]}`.replace("   ", " ").replace("?", ""));
                                 } else {
@@ -177,7 +174,9 @@ export function getComponentProps(args: GetComponentPropsArgs) {
                                             )
                                         }
                                         return (
-                                            <div><span><pre>{nonDefaultPropline}</pre></span></div>
+                                            <div>
+                                                <pre>{nonDefaultPropline}</pre>
+                                            </div>
                                         )
                                     })
                                     return nonDefaultPropsAsHTML;
