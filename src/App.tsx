@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Box, Grid, Link, ListItemButton, Typography, ThemeOptions } from "@mui/material";
+import { useEffect, useState } from "react";
+import { Box, Grid, Link, ListItemButton, Typography, ThemeOptions, Stack, Alert } from "@mui/material";
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 import { CssSelectorItemList } from "./components/CssSelectorItemList"
@@ -17,6 +17,7 @@ const theme = createTheme(style as ThemeOptions);
 function App() {
     const [muiCssSelector, setMuiClass] = useState("");
     const [jsonDisplayAsHTML, getJsonDisplayAsHTML] = useState([]);
+    const [error, setError] = useState(false);
 
     function displayComponentsClassNamesInfo() {
         const muiComponentsClasses = Object.keys(muiCssSelectors);
@@ -35,6 +36,7 @@ function App() {
                                     getComponentProps({
                                         componentClass: muiClassItem,
                                         getJsonDisplayAsHTML,
+                                        setError,
                                     });
                                 }}
                                 selected={muiClassItem === muiCssSelector}
@@ -46,8 +48,21 @@ function App() {
             </Box>)
     }
 
+    useEffect(() => {
+        if(error) {
+            setTimeout(() => setError(false), 5000);
+        }
+    }, [error]);
+
     return (
         <ThemeProvider theme={theme}>
+            {error && (
+                <Stack sx={{ width: '100%' }} spacing={2}>
+                    <Alert variant="filled" severity="error">
+                        Cannot fetch components properties for a display! Try again later!
+                    </Alert>
+                </Stack>
+            )}
             <Box>
                 <Typography variant="h4">
                     MaterialUI styles values overview

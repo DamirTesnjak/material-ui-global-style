@@ -4,7 +4,8 @@ import { GetComponentPropsArgs } from "../types/GetComponentPropsArgs";
 export function getComponentProps(args: GetComponentPropsArgs) {
     const {
         componentClass,
-        getJsonDisplayAsHTML
+        getJsonDisplayAsHTML,
+        setError,
     } = args;
     const componentNameString = componentName(componentClass);
 
@@ -17,7 +18,11 @@ export function getComponentProps(args: GetComponentPropsArgs) {
             }
         })
             .then((res) => {
-                if (res) {
+                if (res.status === 404 || res.status === 500) {
+                    setError(true);
+                }
+                if (res.status === 200) {
+                    console.log('res', res);
                     res.text()
                         .then((tSCode) => {
                             const codeLines = tSCode.split("\n");
@@ -141,7 +146,7 @@ export function getComponentProps(args: GetComponentPropsArgs) {
                                             </div>
                                         )
                                     }
-                                    return (<div/>)
+                                    return (<div />)
                                 }
 
                                 if (propLineIndex > 0 && propsListCleaned[propLineIndex - 1].includes("@default")) {
@@ -186,7 +191,7 @@ export function getComponentProps(args: GetComponentPropsArgs) {
                         });
                 }
             })
-            .catch((err) => console.log('err', err))
+            .catch((_err) => setError(true));
     }
     fetchTypeScriptComponentCode();
 }
