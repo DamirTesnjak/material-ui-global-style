@@ -97,68 +97,45 @@ export function getComponentProps(args: GetComponentPropsArgs) {
                                         const propLineSplit = propLine.split(":");
                                         const newPropValue = function () {
                                             if (Number(defaultValue)) {
-                                                return (<span style={{
-                                                    display: 'inline-block',
-                                                    color: "#3333ff"
-                                                }}>
-                                                    <pre>
-                                                        {Number(defaultValue)}
-                                                    </pre>
-                                                </span>);
+                                                return (
+                                                    <span style={{ display: 'inline-block', color: "#3333ff" }}>
+                                                        <pre>{Number(defaultValue)}</pre>
+                                                    </span>
+                                                );
                                             }
-                                            if (defaultValue.includes("{}")) {
-                                                return (<span style={{
-                                                    display: 'inline-block',
-                                                }}>{"{"}</span>);
-                                            }
+                                            if (defaultValue.includes("{}")) (<span style={{ display: 'inline-block' }}>{"{"}</span>);
                                             if (defaultValue.includes('true')) {
-                                                return (<span style={{
-                                                    display: 'inline-block',
-                                                    color: "#cc33ff"
-                                                }}>
-                                                    <pre>
-                                                        true
-                                                    </pre>
-                                                </span>);
+                                                return (
+                                                    <span style={{ display: 'inline-block', color: "#cc33ff" }}>
+                                                        <pre>true</pre>
+                                                    </span>
+                                                );
                                             }
                                             if (defaultValue.includes('false')) {
-                                                return (<span style={{
-                                                    display: 'inline-block',
-                                                    color: "#cc33ff"
-                                                }}>
-                                                    <pre>
-                                                        false
-                                                    </pre>
-                                                </span>);
+                                                return (
+                                                    <span style={{ display: 'inline-block', color: "#cc33ff" }}>
+                                                        <pre>false</pre>
+                                                    </span>);
                                             }
                                             if (defaultValue[defaultValue.length - 1] === " ") {
-                                                return (<span style={{
-                                                    display: 'inline-block',
-                                                }}>
-                                                    <pre>
-                                                        {defaultValue.slice(0, defaultValue.length - 1)}
-                                                    </pre>
-                                                </span>);
+                                                return (
+                                                    <span style={{ display: 'inline-block' }}>
+                                                        <pre>{defaultValue.slice(0, defaultValue.length - 1)}</pre>
+                                                    </span>
+                                                );
                                             }
                                             if (defaultValue.includes('')) {
-                                                return (<span style={{
-                                                    display: 'inline-block',
-                                                }}>
-                                                    <pre>
-                                                        {defaultValue.slice(0, defaultValue.length)}
-                                                    </pre>
-                                                </span>);
+                                                return (
+                                                    <span style={{ display: 'inline-block' }}>
+                                                        <pre>{defaultValue.slice(0, defaultValue.length)}</pre>
+                                                    </span>
+                                                );
                                             }
                                         }();
                                         return (
                                             <div>
-                                                <span style={{
-                                                    display: 'inline-block',
-                                                    color: "#e67300",
-                                                }}>
-                                                    <pre>
-                                                        {propLineSplit[0].replace("?", "")}:
-                                                    </pre>
+                                                <span style={{ display: 'inline-block', color: "#e67300" }}>
+                                                    <pre>{propLineSplit[0].replace("?", "")}:</pre>
                                                 </span>
                                                 {newPropValue}
                                             </div>
@@ -186,21 +163,18 @@ export function getComponentProps(args: GetComponentPropsArgs) {
 
                                         if (nonDefaultPropline.includes(":")) {
                                             const propLineSplitted = nonDefaultPropline.split(":")
-                                            return (<div>
-                                                <span style={{
-                                                    display: 'inline-block',
-                                                    color: "#e67300",
-                                                }}>
-                                                    <pre>
-                                                        {propLineSplitted[0]}:
-                                                    </pre>
-                                                </span>
-                                                <span style={{ display: 'inline-block' }}>
-                                                    <pre>
-                                                        {propLineSplitted.slice(1, propLineSplitted.length)}
-                                                    </pre>
-                                                </span>
-                                            </div>)
+                                            return (
+                                                <div>
+                                                    <span style={{ display: 'inline-block', color: "#e67300" }}>
+                                                        <pre>{propLineSplitted[0]}:</pre>
+                                                    </span>
+                                                    <span style={{ display: 'inline-block' }}>
+                                                        <pre>
+                                                            {propLineSplitted.slice(1, propLineSplitted.length)}
+                                                        </pre>
+                                                    </span>
+                                                </div>
+                                            )
                                         }
                                         return (
                                             <div><span><pre>{nonDefaultPropline}</pre></span></div>
